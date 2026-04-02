@@ -11,5 +11,7 @@ public interface IGameRepository
 
     Task<Result<GameResultDto>> CreateAsync(CreateGameRequest createGameRequest);
 
-    Task<bool> DeleteByIdAsync(Guid id);
+    Task<Result<GameResultDto>> UpdateAsync(Guid id, UpdateGameRequest updateGameRequest);
+
+    Task<Result<bool>> DeleteByIdAsync(Guid id);
 }

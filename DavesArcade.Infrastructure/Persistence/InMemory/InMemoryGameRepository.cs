@@ -154,17 +154,64 @@ public class InMemoryGameRepository : IGameRepository
         return Task.FromResult(Result<GameResultDto>.Success(gameDto));
     }
 
-    public Task<bool> DeleteByIdAsync(Guid id)
+    public Task<Result<GameResultDto>> UpdateAsync(Guid id, UpdateGameRequest updateGameRequest)
     {
         var game = _games.FirstOrDefault(g => g.Id == id);
 
         if (game is null)
         {
-            return Task.FromResult(false);
+            return Task.FromResult(Result<GameResultDto>.NotFound(
+                "Game.NotFound",
+                $"Game with ID '{id}' was not found."));
+        }
+
+        // Validate genre exists
+        if (updateGameRequest.GenreId != Guid.Parse("11111111-1111-1111-1111-111111111111")
+            && updateGameRequest.GenreId != Guid.Parse("22222222-2222-2222-2222-222222222222")
+            && updateGameRequest.GenreId != Guid.Parse("33333333-3333-3333-3333-333333333333")
+            && updateGameRequest.GenreId != Guid.Parse("44444444-4444-4444-4444-444444444444"))
+        {
+            return Task.FromResult(Result<GameResultDto>.Failure(
+                "Game.InvalidGenre",
+                $"Genre with ID '{updateGameRequest.GenreId}' does not exist.",
+                ErrorType.Validation));
+        }
+
+        // Update game properties
+        game.Name = updateGameRequest.Name;
+        game.GenreId = updateGameRequest.GenreId;
+        game.Genre = new Genre { Id = updateGameRequest.GenreId, Name = GetGenreName(updateGameRequest.GenreId) };
+        game.Price = updateGameRequest.Price;
+        game.ReleaseDate = updateGameRequest.ReleaseDate;
+        game.Description = updateGameRequest.Description;
+        game.LastUpdatedBy = "system"; // or pass this in the request
+
+        var gameDto = new GameResultDto(
+            game.Id,
+            game.Name,
+            game.Genre.Name,
+            game.Price,
+            game.ReleaseDate,
+            game.ImageUri,
+            game.LastUpdatedBy
+        );
+
+        return Task.FromResult(Result<GameResultDto>.Success(gameDto));
+    }
+
+    public Task<Result<bool>> DeleteByIdAsync(Guid id)
+    {
+        var game = _games.FirstOrDefault(g => g.Id == id);
+
+        if (game is null)
+        {
+            return Task.FromResult(Result<bool>.NotFound(
+                "Game.NotFound",
+                $"Game with ID '{id}' was not found."));
         }
 
         _games.Remove(game);
-        return Task.FromResult(true);
+        return Task.FromResult(Result<bool>.Success(true));
     }
 
     private static string GetGenreName(Guid genreId) => genreId.ToString() switch

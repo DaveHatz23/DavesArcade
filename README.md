@@ -72,7 +72,7 @@ daves-arcade/
 
 ---
 
-# ⭐ Why this layout is perfect for your goals
+# ⭐ Why this layout is perferred
 
 ### **1. Clean Architecture at the top level**
 - Domain is pure  

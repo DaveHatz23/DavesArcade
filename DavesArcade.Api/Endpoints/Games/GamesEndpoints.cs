@@ -2,6 +2,7 @@
 using DavesArcade.Api.Endpoints.Games.DeleteGame;
 using DavesArcade.Api.Endpoints.Games.GetGame;
 using DavesArcade.Api.Endpoints.Games.GetGames;
+using DavesArcade.Api.Endpoints.Games.UpdateGame;
 
 namespace DavesArcade.Api.Endpoints.Games;
 
@@ -14,7 +15,7 @@ public static class GamesEndpoints
         group.MapGetGames();
         group.MapGetGame();
         group.MapCreateGame();
-        //group.MapUpdateGame();
+        group.MapUpdateGame();
         group.MapDeleteGame();
     }
 }
