@@ -1,6 +1,7 @@
-﻿using DavesArcade.Application.Interfaces;
+﻿    using DavesArcade.Application.Interfaces;
+using DavesArcade.Application.Results;
 
-namespace DavesArcade.Api.Endpoints.GetGames;
+namespace DavesArcade.Api.Endpoints.Games.GetGames;
 
 public static class GetGamesEndpoint
 {
@@ -9,8 +10,20 @@ public static class GetGamesEndpoint
         // GET /games
         app.MapGet("/", async (IGameRepository gameRepository) =>
             {
-                var games = await gameRepository.GetAllAsync();
-                return Results.Ok(games);
+                var result = await gameRepository.GetAllAsync();
+
+                if (!result.IsSuccess)
+                {
+                    return result.Error!.Type switch
+                    {
+                        ErrorType.NotFound => Results.NotFound(new { error = result.Error.Description, code = result.Error.Code }),
+                        ErrorType.Validation => Results.BadRequest(new { error = result.Error.Description, code = result.Error.Code }),
+                        ErrorType.Conflict => Results.Conflict(new { error = result.Error.Description, code = result.Error.Code }),
+                        _ => Results.Problem("An unexpected error occurred.")
+                    };
+                }
+
+                return Results.Ok(result.Value);
             })
             .AllowAnonymous();
 

@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DavesArcade.Application.DTOs;
+﻿using DavesArcade.Application.DTOs;
+using DavesArcade.Application.Results;
 
-namespace DavesArcade.Application.Interfaces
+namespace DavesArcade.Application.Interfaces;
+
+public interface IGameRepository
 {
-    public interface IGameRepository
-    {
-        Task<IEnumerable<GameResultDto>> GetAllAsync();
+    Task<Result<IEnumerable<GameResultDto>>> GetAllAsync();
 
-        Task<GameResultDto?> GetByIdAsync(Guid id);
-    }
+    Task<Result<GameResultDto>> GetByIdAsync(Guid id);
+    Task<bool> DeleteByIdAsync(Guid id);
 }

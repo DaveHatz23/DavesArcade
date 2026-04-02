@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DavesArcade.Api.Endpoints.GetGames;
+namespace DavesArcade.Api.Endpoints.Games.GetGames;
 
 public record GetGamesDto(
     int PageNumber = 1,

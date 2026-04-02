@@ -1,4 +1,4 @@
-using DavesArcade.Api.Endpoints;
+using DavesArcade.Api.Endpoints.Games;
 using DavesArcade.Application;
 using DavesArcade.Infrastructure;
 

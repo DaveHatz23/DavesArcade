@@ -1,5 +1,6 @@
 ﻿using DavesArcade.Application.DTOs;
 using DavesArcade.Application.Interfaces;
+using DavesArcade.Application.Results;
 using DavesArcade.Domain.Entities;
 
 namespace DavesArcade.Infrastructure.Persistence.InMemory;
@@ -70,7 +71,7 @@ public class InMemoryGameRepository : IGameRepository
         }
     };
 
-    public Task<IEnumerable<GameResultDto>> GetAllAsync()
+    public Task<Result<IEnumerable<GameResultDto>>> GetAllAsync()
     {
         var gameDtos = _games.Select(game => new GameResultDto(
             game.Id,
@@ -82,16 +83,18 @@ public class InMemoryGameRepository : IGameRepository
             game.LastUpdatedBy
         ));
 
-        return Task.FromResult(gameDtos);
+        return Task.FromResult(Result<IEnumerable<GameResultDto>>.Success(gameDtos));
     }
 
-    public Task<GameResultDto> GetByIdAsync(Guid id)
+    public Task<Result<GameResultDto>> GetByIdAsync(Guid id)
     {
         var game = _games.FirstOrDefault(g => g.Id == id);
 
         if (game is null)
         {
-            return Task.FromResult<GameResultDto?>(null);
+            return Task.FromResult(Result<GameResultDto>.NotFound(
+                "Game.NotFound", 
+                $"Game with ID '{id}' was not found."));
         }
 
         var gameDto = new GameResultDto(
@@ -104,6 +107,19 @@ public class InMemoryGameRepository : IGameRepository
             game.LastUpdatedBy
         );
 
-        return Task.FromResult<GameResultDto?>(gameDto);
+        return Task.FromResult(Result<GameResultDto>.Success(gameDto));
+    }
+
+    public Task<bool> DeleteByIdAsync(Guid id)
+    {
+        var game = _games.FirstOrDefault(g => g.Id == id);
+
+        if (game is null)
+        {
+            return Task.FromResult(false);
+        }
+
+        _games.Remove(game);
+        return Task.FromResult(true);
     }
 }

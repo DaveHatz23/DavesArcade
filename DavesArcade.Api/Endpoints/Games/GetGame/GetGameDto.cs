@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DavesArcade.Api.Endpoints.GetGame;
+namespace DavesArcade.Api.Endpoints.Games.GetGame;
 
 public record GameDetailsDto(
     Guid Id,
