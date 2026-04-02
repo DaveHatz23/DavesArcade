@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="DavesArcade.Api/DavesArcade.Api.csproj" />
+  <Project Path="DavesArcade.Application/DavesArcade.Application.csproj" Id="ee4af2c8-0fef-42c7-b17b-2beb118bcc10" />
+  <Project Path="DavesArcade.Domain/DavesArcade.Domain.csproj" Id="17660e7b-08c9-479f-960b-60785f01e4bd" />
+  <Project Path="DavesArcade.FrontEnd/DavesArcade.FrontEnd.csproj" Id="972200b2-339f-42a8-b932-6c0f26151d8f" />
+  <Project Path="DavesArcade.Infrastructure/DavesArcade.Infrastructure.csproj" Id="f9e1a644-4627-4c0a-9f35-f56f6bf1b0c4" />
+</Solution>
