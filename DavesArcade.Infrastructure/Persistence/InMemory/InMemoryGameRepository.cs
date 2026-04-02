@@ -110,6 +110,50 @@ public class InMemoryGameRepository : IGameRepository
         return Task.FromResult(Result<GameResultDto>.Success(gameDto));
     }
 
+    public Task<Result<GameResultDto>> CreateAsync(CreateGameRequest createGameRequest)
+    {
+        // Validate genre exists (optional but good practice)
+        var genreExists = _games.Any(g => g.Genre?.Id == createGameRequest.GenreId);
+
+        if (!genreExists && createGameRequest.GenreId != Guid.Parse("11111111-1111-1111-1111-111111111111")
+                         && createGameRequest.GenreId != Guid.Parse("22222222-2222-2222-2222-222222222222")
+                         && createGameRequest.GenreId != Guid.Parse("33333333-3333-3333-3333-333333333333")
+                         && createGameRequest.GenreId != Guid.Parse("44444444-4444-4444-4444-444444444444"))
+        {
+            return Task.FromResult(Result<GameResultDto>.Failure(
+                "Game.InvalidGenre",
+                $"Genre with ID '{createGameRequest.GenreId}' does not exist.",
+                ErrorType.Validation));
+        }
+
+        var game = new Game
+        {
+            Id = Guid.NewGuid(),
+            Name = createGameRequest.Name,
+            GenreId = createGameRequest.GenreId,
+            Genre = new Genre { Id = createGameRequest.GenreId, Name = GetGenreName(createGameRequest.GenreId) },
+            Price = createGameRequest.Price,
+            ReleaseDate = createGameRequest.ReleaseDate,
+            Description = createGameRequest.Description,
+            ImageUri = createGameRequest.ImageUri ?? "https://placehold.co/100",
+            LastUpdatedBy = createGameRequest.LastUpdatedBy
+        };
+
+        _games.Add(game);
+
+        var gameDto = new GameResultDto(
+            game.Id,
+            game.Name,
+            game.Genre.Name,
+            game.Price,
+            game.ReleaseDate,
+            game.ImageUri,
+            game.LastUpdatedBy
+        );
+
+        return Task.FromResult(Result<GameResultDto>.Success(gameDto));
+    }
+
     public Task<bool> DeleteByIdAsync(Guid id)
     {
         var game = _games.FirstOrDefault(g => g.Id == id);
@@ -122,4 +166,13 @@ public class InMemoryGameRepository : IGameRepository
         _games.Remove(game);
         return Task.FromResult(true);
     }
+
+    private static string GetGenreName(Guid genreId) => genreId.ToString() switch
+    {
+        "11111111-1111-1111-1111-111111111111" => "Shooter",
+        "22222222-2222-2222-2222-222222222222" => "RPG",
+        "33333333-3333-3333-3333-333333333333" => "Simulation",
+        "44444444-4444-4444-4444-444444444444" => "Adventure",
+        _ => "Unknown"
+    };
 }

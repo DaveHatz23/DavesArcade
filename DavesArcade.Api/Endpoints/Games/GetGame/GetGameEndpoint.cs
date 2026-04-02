@@ -9,9 +9,6 @@ public static class GetGameEndpoint
     {
         // GET /games/122233-434d-43434....
 
-        //app.MapGet("/{id}", () => "Hello World")
-        //    .AllowAnonymous();
-
         app.MapGet("/{id}", async (
                 Guid id,
                 IGameRepository gameRepository) =>
