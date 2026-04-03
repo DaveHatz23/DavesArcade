@@ -19,16 +19,19 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: '9.0.x'
         
     - name: Restore dependencies
       run: dotnet restore
+      working-directory: src
       
     - name: Build
       run: dotnet build --configuration Release --no-restore
+      working-directory: src
       
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --results-directory "TestResults"
+      run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --results-directory "../TestResults"
+      working-directory: src
       
     - name: Upload test results
       if: always()
