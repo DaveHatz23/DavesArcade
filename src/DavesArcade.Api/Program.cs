@@ -1,4 +1,5 @@
 using DavesArcade.Api.Endpoints.Games;
+using DavesArcade.Api.Middleware;
 using DavesArcade.Application;
 using DavesArcade.Infrastructure;
 
@@ -14,8 +15,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplication();      // Application layer services
 builder.Services.AddInfrastructure();   // Infrastructure layer services (repositories, data access)
 
-
 var app = builder.Build();
+
+// Add global exception handler
+app.UseMiddleware<GlobalExceptionHandler>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

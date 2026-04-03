@@ -1,4 +1,5 @@
-﻿using DavesArcade.Application.DTOs;
+﻿using DavesArcade.Api.Extensions;
+using DavesArcade.Application.DTOs;
 using DavesArcade.Application.Interfaces;
 
 namespace DavesArcade.Api.Endpoints.Games.UpdateGame;
@@ -14,11 +15,8 @@ public static class UpdateGameEndpoint
                 IGameRepository gameRepository) =>
             {
                 var result = await gameRepository.UpdateAsync(id, updateGameRequest);
-                return Results.Ok(result.Value); // or Results.NoContent() for REST convention
+                    return result.ToHttpResult();
             })
-            .WithParameterValidation()
-            .DisableAntiforgery()
-            //.RequireAuthorization(Policies.AdminAccess);
             .AllowAnonymous();
     }
 }

@@ -41,4 +41,14 @@ public static class ResultExtensions
 
         return result.ToHttpResult();
     }
+
+    public static IResult ToNoContentResult<T>(this Result<T> result)
+    {
+        if (result.IsSuccess)
+        {
+            return Results.NoContent();
+        }
+
+        return result.ToHttpResult();
+    }
 }
