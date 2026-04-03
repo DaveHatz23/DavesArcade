@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../docs/API.md" />
+    <File Path="../README.md" />
+  </Folder>
   <Project Path="../tests/DavesArcade.Tests/DavesArcade.Tests.csproj" />
   <Project Path="DavesArcade.Api/DavesArcade.Api.csproj" />
   <Project Path="DavesArcade.Application/DavesArcade.Application.csproj" Id="ee4af2c8-0fef-42c7-b17b-2beb118bcc10" />
