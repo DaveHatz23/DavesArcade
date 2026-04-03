@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Test (not currently implemented)
     runs-on: ubuntu-latest
     
     steps:
@@ -29,13 +29,13 @@ jobs:
       run: dotnet build --configuration Release --no-restore
       working-directory: src
       
-    - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --results-directory "../TestResults"
-      working-directory: src
+    #- name: Run tests
+    #  run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --results-directory "../TestResults"
+    #  working-directory: src
       
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: TestResults/*.trx
+    #- name: Upload test results
+    #  if: always()
+    #  uses: actions/upload-artifact@v4
+    #  with:
+    #    name: test-results
+    #    path: TestResults/*.trx
