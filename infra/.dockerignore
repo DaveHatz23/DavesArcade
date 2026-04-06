@@ -1,0 +1,37 @@
+# Directories
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+**/coverage/
+
+# Files
+**/.DS_Store
+**/.git
+**/.gitignore
+**/.gitattributes
+**/.vs
+**/.vscode
+**/*.user
+**/*.suo
+**/*.cache
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+**/.env
+**/.editorconfig
+
+# Build artifacts
+**/packages/
+**/node_modules/
+
+# Test and coverage
+**/*.trx
+**/*.coverage
+**/*.coveragexml
+**/coverage.cobertura.xml
+
+# Documentation
+**/README.md
+**/LICENSE
+**/*.md

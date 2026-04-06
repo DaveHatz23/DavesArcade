@@ -1,6 +1,7 @@
 # 🎮 Dave's Arcade - Game Catalog API
 
 [![Build Status](https://github.com/DaveHatz23/DavesArcade/workflows/Build%20and%20Test/badge.svg)](https://github.com/DaveHatz23/DavesArcade/actions)
+[![codecov](https://codecov.io/gh/DaveHatz23/DavesArcade/branch/main/graph/badge.svg?token=YOUR_BADGE_TOKEN)](https://codecov.io/gh/DaveHatz23/DavesArcade)
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -34,6 +35,10 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 - ✅ **Comprehensive Testing** - Unit tests with 90%+ coverage using xUnit and FluentAssertions
 - ✅ **OpenAPI/Swagger** - Interactive API documentation
 - ✅ **Minimal APIs** - Modern .NET 8 endpoint routing
+- ✅ **Docker Support** - Containerized deployment with Docker and Docker Compose
+- ✅ **Health Checks** - Built-in health monitoring endpoint
+- ✅ **CI/CD Pipeline** - Automated builds and testing with GitHub Actions
+- ✅ **Code Coverage** - Integrated coverage reporting with Codecov
 
 ---
 
@@ -47,6 +52,8 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 | **Documentation** | Swagger/OpenAPI |
 | **Architecture** | Clean Architecture, Vertical Slices |
 | **Patterns** | Repository, Result, CQRS-lite |
+| **DevOps** | Docker, Docker Compose, GitHub Actions |
+| **Monitoring** | Health Checks, Code Coverage (Codecov) |
 
 ---
 
@@ -56,7 +63,7 @@ This project follows **Clean Architecture** principles with **Vertical Slice** o
 
 ![Clean Architecture](https://raw.githubusercontent.com/DaveHatz23/DavesArcade/main/docs/architecture.png)
 
-- **Domain Layer**: Contains enterprise-wide business rules. Doesn’t depend on any other layers. (Entities, Value Objects, Domain Events)
+- **Domain Layer**: Contains enterprise-wide business rules. Doesn't depend on any other layers. (Entities, Value Objects, Domain Events)
 - **Application Layer**: Holds application-specific business rules. Features are organized in a vertical slice manner. (Commands, Queries, Handlers, DTOs)
 - **Infrastructure Layer**: Contains implementation for external integrations such as databases, file systems, and web services. (EF Core, Repositories, Services)
 - **API Layer**: Thin layer for exposing the application functionality over HTTP. Implements minimal API endpoints and ties everything together.
@@ -75,23 +82,63 @@ This project follows **Clean Architecture** principles with **Vertical Slice** o
 ### Prerequisites
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+- (Optional) [Docker Desktop](https://www.docker.com/products/docker-desktop/) for containerized deployment
 - (Optional) [Visual Studio 2022](https://visualstudio.microsoft.com/) or [VS Code](https://code.visualstudio.com/)
 
 ### Installation & Running
 
+#### Option 1: Run with .NET CLI
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/DaveHatz23/DavesArcade.git
+   cd DavesArcade
    ```
 
-2. **Navigate to the `src/Api` directory and run the project**:
+2. **Restore dependencies**
    ```bash
-   cd src/Api
+   dotnet restore
+   ```
+
+3. **Run the API**
+   ```bash
+   cd src/DavesArcade.Api
    dotnet run
    ```
 
-3. **Run the API**: The API will be available at `http://localhost:5000`.
-4. **Access Swagger UI**: Open `http://localhost:5000/swagger` in your browser to interact with the API documentation.
+4. **Access the API**
+   - API: `https://localhost:7xxx` (check console for actual port)
+   - Swagger UI: `https://localhost:7xxx/swagger`
+
+#### Option 2: Run with Docker 🐳 (Recommended)
+
+**Windows (PowerShell):**
+```powershell
+git clone https://github.com/DaveHatz23/DavesArcade.git
+cd DavesArcade/infra
+.\start.ps1
+```
+
+**Linux/Mac:**
+```bash
+git clone https://github.com/DaveHatz23/DavesArcade.git
+cd DavesArcade/infra
+chmod +x start.sh
+./start.sh
+```
+
+**Or manually:**
+```bash
+cd infra
+docker-compose up -d
+```
+
+**Access the API:**
+- API: `http://localhost:5000`
+- Swagger UI: `http://localhost:5000/swagger`
+- Health Check: `http://localhost:5000/health`
+
+> 📖 **See [Infrastructure README](infra/README.md) and [Docker Documentation](docs/DOCKER.md) for detailed Docker usage.**
 
 ---
 
@@ -119,83 +166,49 @@ Accept: application/json
 ````````
 
 **Response (200 OK)**
-````````
-
-# Response
-````````markdown
+````````json
 {
   "id": "a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d",
-  "title": "Sample Game",
-  "genre": "Action",
-  "releaseDate": "2023-01-01",
-  "developer": "XYZ Studios",
-  "publisher": "ABC Games",
-  "price": 29.99
+  "name": "Halo Infinite",
+  "genre": "Shooter",
+  "price": 59.99,
+  "releaseDate": "2021-12-08",
+  "imageUri": "/images/halo-infinite.jpg",
+  "lastUpdatedBy": "admin"
 }
+````````
+
+---
+
+## 🧪 Running Tests
+
+### Run All Tests
+
+```bash
+dotnet test
 ```
 
----
+### Run Tests with Coverage
 
-## 🚧 Roadmap
+```bash
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+```
 
-Future enhancements and features planned for the project:
-- [ ] Add more unit tests to cover 100% of the codebase
-- [ ] Implement CI/CD pipeline using GitHub Actions
-- [ ] Add support for Blazor frontend
-- [ ] Dockerize the application for easier deployment
-- [ ] Integrate with PostgreSQL and MongoDB as shown in the diagrams
-- [ ] Enhance API documentation with more examples and tutorials
+### View Coverage Report
 
----
+```bash
+# Install report generator (one-time)
+dotnet tool install -g dotnet-reportgenerator-globaltool
 
-## 🤝 Contributing
+# Generate HTML report
+reportgenerator -reports:"tests/DavesArcade.Tests/coverage.opencover.xml" -targetdir:"coverage-report"
 
-Contributions are welcome! Please follow these steps:
+# Open report
+start coverage-report/index.html  # Windows
+open coverage-report/index.html   # Mac
+xdg-open coverage-report/index.html  # Linux
+```
 
-1. Fork the repository
-
-2. Create a new branch:
-   ```bash
-   git checkout -b feature/YourFeatureName
-   ```
-
-3. Make your changes and commit them:
-   ```bash
-   git commit -m "Add your message here"
-   ```
-
-4. Push to your forked repository:
-   ```bash
-   git push origin feature/YourFeatureName
-   ```
-
-5. Submit a pull request describing your changes and why they should be merged.
-
-Please ensure your code adheres to the existing style and includes appropriate tests.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/DaveHatz23/DavesArcade/blob/main/LICENSE) file for details.
-
----
-
-## 💻 Acknowledgments
-
-Inspiration and references from:
-- [Clean Architecture](https://ardalis.com/clean-architecture/) by Steve Smith
-- [Vertical Slice Architecture](https://michiduz.dev/posts/aspnet/clean-architecture-in-aspnet-core-3/) by Mikito Oka
-- [Results in C#](https://jimcloud.wordpress.com/2020/07/24/c-results-zip-throw/) by Jimmy Bogard
-- [Minimal APIs in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0) by Microsoft Docs
-
-And special thanks to the .NET community for their amazing tools and support!
-
----
-
-### Run with Code Coverage
-
-````````markdown
 ### Test Coverage
 
 - **InMemoryGameRepository**: 100% coverage (all CRUD operations)
@@ -206,7 +219,47 @@ And special thanks to the .NET community for their amazing tools and support!
 
 ## 📁 Project Structure
 
-````````
+```
+DavesArcade/
+├── .github/
+│   └── workflows/              # GitHub Actions CI/CD
+├── docs/
+│   ├── API.md                  # Complete API documentation
+│   └── DOCKER.md               # Docker usage guide
+├── infra/
+│   ├── Dockerfile              # Multi-stage Docker build
+│   ├── docker-compose.yml      # Container orchestration
+│   ├── .dockerignore           # Docker build exclusions
+│   ├── start.ps1/start.sh      # Quick start scripts
+│   └── README.md               # Infrastructure docs
+├── src/
+│   ├── DavesArcade.Api/        # API Layer (Endpoints, Middleware)
+│   │   ├── Endpoints/
+│   │   │   └── Games/          # Vertical slice endpoints
+│   │   ├── Extensions/
+│   │   │   └── ResultExtensions.cs
+│   │   └── Middleware/
+│   │       └── GlobalExceptionHandler.cs
+│   ├── DavesArcade.Application/  # Application Layer (DTOs, Interfaces)
+│   │   ├── DTOs/
+│   │   ├── Interfaces/
+│   │   └── Results/
+│   ├── DavesArcade.Domain/     # Domain Layer (Entities)
+│   │   └── Entities/
+│   └── DavesArcade.Infrastructure/  # Infrastructure Layer (Data Access)
+│       └── Persistence/
+│           └── InMemory/
+├── tests/
+│   └── DavesArcade.Tests/      # Unit tests
+│       └── Unit/
+│           ├── Api/Extensions/
+│           └── Infrastructure/Repositories/
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+---
 
 ## 💡 Design Decisions
 
@@ -257,21 +310,51 @@ For this showcase project:
 - [x] Unit tests (90%+ coverage)
 - [x] Swagger documentation
 
-### Phase 2: Enhanced Features 🚧 (Planned)
+### Phase 2: Enhanced Features ✅ (Complete)
+- [x] GitHub Actions CI/CD pipeline
+- [x] Docker support
+- [x] Health checks endpoint
+- [x] Code coverage reporting with Codecov
+- [x] Comprehensive API documentation
+- [x] Infrastructure automation scripts
+
+### Phase 3: Advanced Features 📅 (Planned)
 - [ ] FluentValidation for request validation
-- [ ] GitHub Actions CI/CD pipeline
-- [ ] Docker support
-- [ ] Health checks endpoint
 - [ ] Structured logging (Serilog)
 - [ ] API versioning
-
-### Phase 3: Advanced Features 📅 (Future)
 - [ ] PostgreSQL with EF Core
 - [ ] Authentication/Authorization (JWT)
 - [ ] Rate limiting
 - [ ] Caching (Redis)
 - [ ] Integration tests
 - [ ] Blazor/Next.js frontend
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+
+2. Create a new branch:
+   ```bash
+   git checkout -b feature/YourFeatureName
+   ```
+
+3. Make your changes and commit them:
+   ```bash
+   git commit -m "Add your message here"
+   ```
+
+4. Push to your forked repository:
+   ```bash
+   git push origin feature/YourFeatureName
+   ```
+
+5. Submit a pull request describing your changes and why they should be merged.
+
+Please ensure your code adheres to the existing style and includes appropriate tests.
 
 ---
 
@@ -286,7 +369,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **David Hatzenbuehler**
 
 - GitHub: [@DaveHatz23](https://github.com/DaveHatz23)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/davehatz) 
+- LinkedIn: [linkedin.com/in/davehatz](https://linkedin.com/in/davehatz)
 
 ---
 

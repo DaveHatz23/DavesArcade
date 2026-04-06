@@ -29,6 +29,9 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddApplication();      // Application layer services
 builder.Services.AddInfrastructure();   // Infrastructure layer services (repositories, data access)
 
+// Add health checks
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Add global exception handler
@@ -45,6 +48,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Map health check endpoint
+app.MapHealthChecks("/health");
 
 app.MapGames();
 

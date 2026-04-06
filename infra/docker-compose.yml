@@ -1,0 +1,24 @@
+services:
+  davesarcade-api:
+    image: davesarcade-api:latest
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    container_name: davesarcade-api
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+networks:
+  default:
+    name: davesarcade-network

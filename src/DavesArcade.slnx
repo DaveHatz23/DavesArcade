@@ -1,6 +1,10 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="../.gitignore" />
     <File Path="../docs/API.md" />
+    <File Path="../infra/.dockerignore" />
+    <File Path="../infra/docker-compose.yml" />
+    <File Path="../infra/Dockerfile" />
     <File Path="../README.md" />
   </Folder>
   <Project Path="../tests/DavesArcade.Tests/DavesArcade.Tests.csproj" />
