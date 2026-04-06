@@ -13,6 +13,10 @@ public static class DeleteGameEndpoint
             Guid id,
             IGameRepository gameRepository) =>
         {
+            // Call the repository to delete the game by id.
+            // Return 204 No Content if successful
+            // Return 404 if the game with the specified id does not exist,
+            // or an appropriate error response if the delete operation fails for some reason (e.g., database error).
             var result = await gameRepository.DeleteByIdAsync(id);
             
             if (!result.IsSuccess)

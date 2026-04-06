@@ -211,6 +211,7 @@ public class InMemoryGameRepository : IGameRepository
 
     public Task<Result<bool>> DeleteByIdAsync(Guid id)
     {
+        // Check if the Game exists
         var game = _games.FirstOrDefault(g => g.Id == id);
 
         if (game is null)
