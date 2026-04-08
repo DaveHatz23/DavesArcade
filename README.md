@@ -19,6 +19,7 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 - [Getting Started](#-getting-started)
 - [API Endpoints](#-api-endpoints)
 - [Running Tests](#-running-tests)
+- [Logging & Monitoring](#-logging--monitoring)
 - [Project Structure](#-project-structure)
 - [Design Decisions](#-design-decisions)
 - [Roadmap](#-roadmap)
@@ -32,7 +33,8 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 - ✅ **Result Pattern** - Type-safe error handling without exceptions
 - ✅ **Global Exception Handling** - Centralized error management middleware
 - ✅ **Repository Pattern** - Abstracted data access with in-memory implementation
-- ✅ **Comprehensive Testing** - Unit tests with 90%+ coverage using xUnit and FluentAssertions
+- ✅ **Comprehensive Testing** - 75 tests with 83% coverage (Unit + Integration)
+- ✅ **Structured Logging** - Serilog with console and file sinks for observability
 - ✅ **OpenAPI/Swagger** - Interactive API documentation
 - ✅ **Minimal APIs** - Modern .NET 8 endpoint routing
 - ✅ **Docker Support** - Containerized deployment with Docker and Docker Compose
@@ -53,7 +55,73 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 | **Architecture** | Clean Architecture, Vertical Slices |
 | **Patterns** | Repository, Result, CQRS-lite |
 | **DevOps** | Docker, Docker Compose, GitHub Actions |
+| **Logging** | Serilog (Console, File, Structured) |
 | **Monitoring** | Health Checks, Code Coverage (Codecov) |
+
+---
+
+## 📊 Logging & Monitoring
+
+### Structured Logging with Serilog
+
+The application uses **Serilog** for structured, production-ready logging with multiple output sinks.
+
+#### Log Outputs
+
+**Console:**
+```
+[15:30:45 INF] Starting Dave's Arcade API
+[15:30:50 INF] HTTP GET /games responded 200 in 45.2341 ms
+[15:30:52 INF] Fetching game with a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d
+[15:30:52 INF] Successfully retrieved game "Halo Infinite"
+```
+
+**Rolling Files:** `logs/davesarcade-YYYYMMDD.log`
+```
+2026-04-06 15:30:45.123 +00:00 [INF] Starting Dave's Arcade API {"MachineName":"SERVER-01","ThreadId":1}
+2026-04-06 15:30:50.234 +00:00 [INF] HTTP GET /games responded 200 in 45.2341 ms {"RequestHost":"localhost:5000","UserAgent":"Mozilla/5.0..."}
+```
+
+#### Features
+
+- ✅ **Structured Data**: Logs include typed properties for easy querying
+- ✅ **Request Logging**: Automatic HTTP request/response logging
+- ✅ **Performance Tracking**: Response times tracked for all endpoints
+- ✅ **Enrichment**: Machine name, thread ID, and request context
+- ✅ **Rolling Files**: Daily log rotation prevents disk space issues
+- ✅ **Environment-Specific**: Different log levels per environment
+
+#### Configuration
+
+Logging is configured in `appsettings.json`:
+
+```json
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "System": "Warning"
+      }
+    }
+  }
+}
+```
+
+**Development environment** (`appsettings.Development.json`) logs at `Debug` level for detailed diagnostics.
+
+#### View Logs
+
+```bash
+# Follow live logs
+tail -f logs/davesarcade-20260406.log   # Linux/Mac
+Get-Content logs/davesarcade-20260406.log -Wait  # Windows PowerShell
+
+# Search logs
+grep "ERROR" logs/*.log                 # Linux/Mac
+Select-String -Pattern "ERROR" -Path logs/*.log  # Windows
+```
 
 ---
 
@@ -188,20 +256,28 @@ Accept: application/json
 dotnet test
 ```
 
+**Test Summary:**
+- 47 Unit Tests (Repository, Extensions, Result Pattern)
+- 28 Integration Tests (Full HTTP pipeline, all endpoints)
+- **75 Total Tests** with **83% Code Coverage** ✅
+
 ### Run Tests with Coverage
 
+**Quick Method (Automated Script):**
 ```bash
-dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+# Windows
+.\coverage.ps1
+
+# Linux/Mac
+./coverage.sh
 ```
 
-### View Coverage Report
-
+**Manual Method:**
 ```bash
-# Install report generator (one-time)
-dotnet tool install -g dotnet-reportgenerator-globaltool
+dotnet test --collect:"XPlat Code Coverage" --results-directory:"./coverage"
 
 # Generate HTML report
-reportgenerator -reports:"tests/DavesArcade.Tests/coverage.opencover.xml" -targetdir:"coverage-report"
+reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
 
 # Open report
 start coverage-report/index.html  # Windows
@@ -209,11 +285,26 @@ open coverage-report/index.html   # Mac
 xdg-open coverage-report/index.html  # Linux
 ```
 
-### Test Coverage
+### Test Coverage by Project
 
-- **InMemoryGameRepository**: 100% coverage (all CRUD operations)
-- **ResultExtensions**: 100% coverage (HTTP result mapping)
-- **Overall**: 90%+ code coverage
+- **DavesArcade.Domain**: 100% coverage
+- **DavesArcade.Application**: 100% coverage
+- **DavesArcade.Infrastructure**: 99.4% coverage
+- **DavesArcade.Api**: 63.6% coverage (DTOs excluded)
+- **Overall**: 83% code coverage
+
+### Run Specific Test Types
+
+```bash
+# Run only unit tests
+dotenu test --filter "FullyQualifiedName~Unit"
+
+# Run only integration tests
+dotnet test --filter "FullyQualifiedName~Integration"
+
+# Run tests for specific feature
+dotnet test --filter "FullyQualifiedName~GameRepository"
+```
 
 ---
 
@@ -250,10 +341,16 @@ DavesArcade/
 │       └── Persistence/
 │           └── InMemory/
 ├── tests/
-│   └── DavesArcade.Tests/      # Unit tests
-│       └── Unit/
-│           ├── Api/Extensions/
-│           └── Infrastructure/Repositories/
+│   └── DavesArcade.Tests/      # Unit & Integration tests
+│       ├── Unit/               # Unit tests (47 tests)
+│       │   ├── Api/Extensions/
+│       │   └── Infrastructure/Repositories/
+│       └── Integration/        # Integration tests (28 tests)
+│           ├── CustomWebApplicationFactory.cs
+│           ├── GamesEndpointsTests.cs
+│           └── HealthCheckTests.cs
+├── coverage.ps1                # Coverage report generator (Windows)
+├── coverage.sh                 # Coverage report generator (Linux/Mac)
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -298,6 +395,15 @@ For this showcase project:
 - ✅ Demonstrates repository pattern abstraction
 - ✅ Easy to swap for EF Core later
 
+### Why Serilog for Logging?
+
+- **Structured Logging**: Log data as typed properties, not just strings
+- **Multiple Sinks**: Write to console, files, databases, or cloud services
+- **Performance**: Minimal overhead with async logging
+- **Flexibility**: Environment-specific configuration
+- **Industry Standard**: Used in production by thousands of companies
+- **Queryable**: Structured data enables easy log searching and analysis
+
 ---
 
 ## 🗺️ Roadmap
@@ -317,68 +423,15 @@ For this showcase project:
 - [x] Code coverage reporting with Codecov
 - [x] Comprehensive API documentation
 - [x] Infrastructure automation scripts
+- [x] Integration tests (28 tests)
+- [x] Structured logging with Serilog
 
 ### Phase 3: Advanced Features 📅 (Planned)
 - [ ] FluentValidation for request validation
-- [ ] Structured logging (Serilog)
 - [ ] API versioning
 - [ ] PostgreSQL with EF Core
 - [ ] Authentication/Authorization (JWT)
 - [ ] Rate limiting
 - [ ] Caching (Redis)
-- [ ] Integration tests
-- [ ] Blazor/Next.js frontend
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-
-2. Create a new branch:
-   ```bash
-   git checkout -b feature/YourFeatureName
-   ```
-
-3. Make your changes and commit them:
-   ```bash
-   git commit -m "Add your message here"
-   ```
-
-4. Push to your forked repository:
-   ```bash
-   git push origin feature/YourFeatureName
-   ```
-
-5. Submit a pull request describing your changes and why they should be merged.
-
-Please ensure your code adheres to the existing style and includes appropriate tests.
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**David Hatzenbuehler**
-
-- GitHub: [@DaveHatz23](https://github.com/DaveHatz23)
-- LinkedIn: [linkedin.com/in/davehatz](https://linkedin.com/in/davehatz)
-
----
-
-## 🙏 Acknowledgments
-
-- Inspired by Clean Architecture principles by Robert C. Martin
-- Result pattern inspired by functional programming concepts
-- Built as a portfolio showcase project demonstrating enterprise .NET development
-
----
-
-**⭐ If you find this project helpful, please consider giving it a star!**
+- [ ] Performance benchmarking
+- [ ] Blazor/Next.js frontend (optional)
