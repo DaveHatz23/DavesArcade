@@ -12,7 +12,8 @@ public static class UpdateGameEndpoint
         app.MapPut("/{id}", async (
                 Guid id,
                 UpdateGameRequest updateGameRequest,
-                IGameRepository gameRepository) =>
+                IGameRepository gameRepository,
+                ILogger<Program> logger) =>
             {
                 // Fetch / Modify / Save 
 

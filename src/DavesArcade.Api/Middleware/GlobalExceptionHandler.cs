@@ -1,24 +1,22 @@
-﻿using System.Net;
+﻿    using System.Net;
 using System.Text.Json;
 
 namespace DavesArcade.Api.Middleware;
 
-public class GlobalExceptionHandler
+public class GlobalExceptionHandler : IMiddleware
 {
-    private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandler> _logger;
 
-    public GlobalExceptionHandler(RequestDelegate next, ILogger<GlobalExceptionHandler> logger)
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
     {
-        _next = next;
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
         {
-            await _next(context);
+            await next(context);
         }
         catch (Exception ex)
         {

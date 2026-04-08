@@ -11,9 +11,23 @@ public static class GetGameEndpoint
 
         app.MapGet("/{id}", async (
                 Guid id,
-                IGameRepository gameRepository) =>
+                IGameRepository gameRepository,
+                ILogger<Program> logger) =>
             {
+                logger.LogInformation($"Fetching game with {id}");
+
                 var result = await gameRepository.GetByIdAsync(id);
+
+                if (!result.IsSuccess)
+                {
+                    logger.LogWarning($"Game {id} not found");
+                }
+                else
+                {
+                    logger.LogInformation("Successfully retrieved game {GameName} ({GameId})",
+                        result.Value!.Name, id);
+                }
+
                 return result.ToHttpResult();
             })
             .AllowAnonymous();

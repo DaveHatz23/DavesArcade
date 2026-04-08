@@ -47,6 +47,10 @@ bld/
 *.coveragexml
 coverage.cobertura.xml
 
+# Logs
+logs/
+*.log
+
 # Uncomment if you have tasks that rely on *.refresh files to move binaries
 # (https://github.com/github/gitignore/pull/3736)
 #!**/[Bb]in/*.refresh

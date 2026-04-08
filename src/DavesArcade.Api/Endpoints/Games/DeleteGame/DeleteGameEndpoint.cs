@@ -11,8 +11,11 @@ public static class DeleteGameEndpoint
 
         app.MapDelete("/{id}", async (
             Guid id,
-            IGameRepository gameRepository) =>
+            IGameRepository gameRepository,
+            ILogger<Program> logger) =>
         {
+            logger.LogInformation($"Deleting game id {id}");
+
             // Call the repository to delete the game by id.
             // Return 204 No Content if successful
             // Return 404 if the game with the specified id does not exist,
