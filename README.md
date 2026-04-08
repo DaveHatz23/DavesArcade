@@ -35,7 +35,8 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 - ✅ **Repository Pattern** - Abstracted data access with in-memory implementation
 - ✅ **Comprehensive Testing** - 75 tests with 83% coverage (Unit + Integration)
 - ✅ **Structured Logging** - Serilog with console and file sinks for observability
-- ✅ **OpenAPI/Swagger** - Interactive API documentation
+- ✅ **OpenAPI/Swagger** - Interactive API documentation with per-version docs
+- ✅ **API Versioning** - URL segment versioning (v1/v2) with Swagger integration
 - ✅ **Minimal APIs** - Modern .NET 8 endpoint routing
 - ✅ **Docker Support** - Containerized deployment with Docker and Docker Compose
 - ✅ **Health Checks** - Built-in health monitoring endpoint
@@ -50,8 +51,9 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 |-------|-------------|
 | **Framework** | .NET 8.0 |
 | **API** | ASP.NET Core Minimal APIs |
+| **Versioning** | Asp.Versioning 8.x (URL segment) |
 | **Testing** | xUnit, FluentAssertions, Coverlet |
-| **Documentation** | Swagger/OpenAPI |
+| **Documentation** | Swagger/OpenAPI (per-version docs) |
 | **Architecture** | Clean Architecture, Vertical Slices |
 | **Patterns** | Repository, Result, CQRS-lite |
 | **DevOps** | Docker, Docker Compose, GitHub Actions |
@@ -62,11 +64,9 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 
 ## 📊 Logging & Monitoring
 
-### Structured Logging with Serilog
-
 The application uses **Serilog** for structured, production-ready logging with multiple output sinks.
 
-#### Log Outputs
+### Log Outputs
 
 **Console:**
 ```
@@ -142,6 +142,7 @@ This project follows **Clean Architecture** principles with **Vertical Slice** o
 - **Extension Methods**: `ToHttpResult()` centralizes Result → HTTP response mapping
 - **In-Memory Repository**: Simplifies development and testing without database dependencies
 - **Vertical Slices**: Each feature (GetGames, CreateGame, etc.) is self-contained
+- **URL Segment Versioning**: Routes are prefixed with `/v{version}` (e.g. `/v1/games`, `/v2/games`)
 
 ---
 
@@ -176,7 +177,8 @@ This project follows **Clean Architecture** principles with **Vertical Slice** o
 
 4. **Access the API**
    - API: `https://localhost:7xxx` (check console for actual port)
-   - Swagger UI: `https://localhost:7xxx/swagger`
+   - Swagger UI v1: `https://localhost:7xxx/swagger` → select **v1**
+   - Swagger UI v2: `https://localhost:7xxx/swagger` → select **v2**
 
 #### Option 2: Run with Docker 🐳 (Recommended)
 
@@ -214,21 +216,42 @@ docker-compose up -d
 
 For complete API documentation with detailed examples, see **[API Documentation](docs/API.md)**.
 
+### API Versioning
+
+All endpoints are versioned via URL segment. The current versions are:
+
+| Version | Base Path | Status |
+|---------|-----------|--------|
+| v1 | `/v1/games` | Stable |
+| v2 | `/v2/games` | Enhanced (filtering + pagination) |
+
 ### Quick Reference
+
+#### V1 Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/games` | Get all games |
-| `GET` | `/games/{id}` | Get game by ID |
-| `POST` | `/games` | Create new game |
-| `PUT` | `/games/{id}` | Update existing game |
-| `DELETE` | `/games/{id}` | Delete game |
+| `GET` | `/v1/games` | Get all games |
+| `GET` | `/v1/games/{id}` | Get game by ID |
+| `POST` | `/v1/games` | Create new game |
+| `PUT` | `/v1/games/{id}` | Update existing game |
+| `DELETE` | `/v1/games/{id}` | Delete game |
+
+#### V2 Endpoints (Enhanced)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/v2/games?genre=RPG&pageNumber=1&pageSize=10` | Get games with filtering and pagination |
+| `GET` | `/v2/games/{id}` | Get game by ID |
+| `POST` | `/v2/games` | Create new game |
+| `PUT` | `/v2/games/{id}` | Update existing game |
+| `DELETE` | `/v2/games/{id}` | Delete game |
 
 ### Example: Get Game by ID
 
 **Request**
 ````````http
-GET /games/a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d HTTP/1.1
+GET /v1/games/a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d HTTP/1.1
 Host: localhost:5000
 Accept: application/json
 ````````
@@ -243,6 +266,41 @@ Accept: application/json
   "releaseDate": "2021-12-08",
   "imageUri": "/images/halo-infinite.jpg",
   "lastUpdatedBy": "admin"
+}
+````````
+
+### Example: Get Games with Filtering and Pagination (V2)
+
+**Request**
+````````http
+GET /v2/games?genre=RPG&pageNumber=1&pageSize=5 HTTP/1.1
+Host: localhost:5000
+Accept: application/json
+````````
+
+**Response (200 OK)**
+````````json
+{
+  "data": [
+    {
+      "id": "b2c3d4e5-f6a7-4b5c-9d1e-2f3a4b5c6d7e",
+      "name": "Elden Ring",
+      "genre": "RPG",
+      "price": 59.99,
+      "releaseDate": "2022-02-25",
+      "imageUri": "/images/elden-ring.jpg",
+      "lastUpdatedBy": "admin"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "pageSize": 5,
+    "totalCount": 2,
+    "totalPages": 1
+  },
+  "filters": {
+    "genre": "RPG"
+  }
 }
 ````````
 
@@ -404,6 +462,13 @@ For this showcase project:
 - **Industry Standard**: Used in production by thousands of companies
 - **Queryable**: Structured data enables easy log searching and analysis
 
+### Why API Versioning?
+
+- **Non-breaking changes**: New features (e.g. filtering, pagination) can be introduced in v2 without affecting existing v1 consumers
+- **Explicit contracts**: Each version has its own Swagger doc, making the contract per version clear
+- **URL segment strategy**: `/v1/games` is the most discoverable and cache-friendly versioning approach
+- **Future-proof**: Adding v3 requires only a new endpoint mapping and version registration
+
 ---
 
 ## 🗺️ Roadmap
@@ -425,10 +490,10 @@ For this showcase project:
 - [x] Infrastructure automation scripts
 - [x] Integration tests (28 tests)
 - [x] Structured logging with Serilog
+- [x] API versioning (v1/v2 with URL segment strategy)
 
 ### Phase 3: Advanced Features 📅 (Planned)
 - [ ] FluentValidation for request validation
-- [ ] API versioning
 - [ ] PostgreSQL with EF Core
 - [ ] Authentication/Authorization (JWT)
 - [ ] Rate limiting

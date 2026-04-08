@@ -14,6 +14,7 @@ public class GamesEndpointsTests : IDisposable
 {
     private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
+    private const string BaseUrl = "/v1/games";
 
     public GamesEndpointsTests()
     {
@@ -36,7 +37,7 @@ public class GamesEndpointsTests : IDisposable
         // Arrange - client already configured
 
         // Act
-        var response = await _client.GetAsync("/games");
+        var response = await _client.GetAsync(BaseUrl);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -49,7 +50,7 @@ public class GamesEndpointsTests : IDisposable
         var expectedGameCount = 5; // InMemoryGameRepository seeds 5 games
 
         // Act
-        var response = await _client.GetAsync("/games");
+        var response = await _client.GetAsync(BaseUrl);
         var games = await response.Content.ReadFromJsonAsync<List<GameResultDto>>();
 
         // Assert
@@ -62,7 +63,7 @@ public class GamesEndpointsTests : IDisposable
     public async Task GetGames_ReturnsGamesWithCorrectProperties()
     {
         // Act
-        var response = await _client.GetAsync("/games");
+        var response = await _client.GetAsync(BaseUrl);
         var games = await response.Content.ReadFromJsonAsync<List<GameResultDto>>();
 
         // Assert
@@ -83,7 +84,7 @@ public class GamesEndpointsTests : IDisposable
     public async Task GetGames_ReturnsCorrectContentType()
     {
         // Act
-        var response = await _client.GetAsync("/games");
+        var response = await _client.GetAsync(BaseUrl);
 
         // Assert
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
@@ -100,7 +101,7 @@ public class GamesEndpointsTests : IDisposable
         var validGameId = Guid.Parse("a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d"); // Halo Infinite
 
         // Act
-        var response = await _client.GetAsync($"/games/{validGameId}");
+        var response = await _client.GetAsync($"{BaseUrl}/{validGameId}");
         var game = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -118,7 +119,7 @@ public class GamesEndpointsTests : IDisposable
         var invalidGameId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/games/{invalidGameId}");
+        var response = await _client.GetAsync($"{BaseUrl}/{invalidGameId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -131,7 +132,7 @@ public class GamesEndpointsTests : IDisposable
         var invalidGameId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/games/{invalidGameId}");
+        var response = await _client.GetAsync($"{BaseUrl}/{invalidGameId}");
         var content = await response.Content.ReadAsStringAsync();
 
         // Assert
@@ -152,7 +153,7 @@ public class GamesEndpointsTests : IDisposable
         var gameId = Guid.Parse(gameIdString);
 
         // Act
-        var response = await _client.GetAsync($"/games/{gameId}");
+        var response = await _client.GetAsync($"{BaseUrl}/{gameId}");
         var game = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -182,7 +183,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PostAsJsonAsync("/games", newGame);
+        var response = await _client.PostAsJsonAsync(BaseUrl, newGame);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -203,7 +204,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PostAsJsonAsync("/games", newGame);
+        var response = await _client.PostAsJsonAsync(BaseUrl, newGame);
         var createdGame = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -229,7 +230,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PostAsJsonAsync("/games", newGame);
+        var response = await _client.PostAsJsonAsync(BaseUrl, newGame);
         var createdGame = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -250,7 +251,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PostAsJsonAsync("/games", invalidGame);
+        var response = await _client.PostAsJsonAsync(BaseUrl, invalidGame);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -270,7 +271,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PostAsJsonAsync("/games", newGame);
+        var response = await _client.PostAsJsonAsync(BaseUrl, newGame);
         var createdGame = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -296,7 +297,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/games/{existingGameId}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"{BaseUrl}/{existingGameId}", updateRequest);
         var updatedGame = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -322,7 +323,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/games/{invalidGameId}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"{BaseUrl}/{invalidGameId}", updateRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -342,7 +343,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/games/{existingGameId}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"{BaseUrl}/{existingGameId}", updateRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -364,7 +365,7 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/games/{gameId}", updateRequest);
+        var response = await _client.PutAsJsonAsync($"{BaseUrl}/{gameId}", updateRequest);
         var updatedGame = await response.Content.ReadFromJsonAsync<GameResultDto>();
 
         // Assert
@@ -383,7 +384,7 @@ public class GamesEndpointsTests : IDisposable
         var gameId = Guid.Parse("d4e5f6a7-b8c9-4d5e-9f1a-4b5c6d7e8f9a"); // Cyberpunk 2077
 
         // Act
-        var response = await _client.DeleteAsync($"/games/{gameId}");
+        var response = await _client.DeleteAsync($"{BaseUrl}/{gameId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -396,8 +397,8 @@ public class GamesEndpointsTests : IDisposable
         var gameId = Guid.Parse("e5f6a7b8-c9d1-4e5f-9a1b-5c6d7e8f9a0b"); // Zelda
 
         // Act
-        var deleteResponse = await _client.DeleteAsync($"/games/{gameId}");
-        var getResponse = await _client.GetAsync($"/games/{gameId}");
+        var deleteResponse = await _client.DeleteAsync($"{BaseUrl}/{gameId}");
+        var getResponse = await _client.GetAsync($"{BaseUrl}/{gameId}");
 
         // Assert
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -411,7 +412,7 @@ public class GamesEndpointsTests : IDisposable
         var invalidGameId = Guid.NewGuid();
 
         // Act
-        var response = await _client.DeleteAsync($"/games/{invalidGameId}");
+        var response = await _client.DeleteAsync($"{BaseUrl}/{invalidGameId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -424,8 +425,8 @@ public class GamesEndpointsTests : IDisposable
         var gameId = Guid.Parse("a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d"); // Halo Infinite
 
         // Act
-        var firstDeleteResponse = await _client.DeleteAsync($"/games/{gameId}");
-        var secondDeleteResponse = await _client.DeleteAsync($"/games/{gameId}");
+        var firstDeleteResponse = await _client.DeleteAsync($"{BaseUrl}/{gameId}");
+        var secondDeleteResponse = await _client.DeleteAsync($"{BaseUrl}/{gameId}");
 
         // Assert
         firstDeleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -449,13 +450,13 @@ public class GamesEndpointsTests : IDisposable
         );
 
         // Act & Assert - Create
-        var createResponse = await _client.PostAsJsonAsync("/games", createRequest);
+        var createResponse = await _client.PostAsJsonAsync(BaseUrl, createRequest);
         createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
         var createdGame = await createResponse.Content.ReadFromJsonAsync<GameResultDto>();
         createdGame.Should().NotBeNull();
 
         // Act & Assert - Read
-        var getResponse = await _client.GetAsync($"/games/{createdGame!.Id}");
+        var getResponse = await _client.GetAsync($"{BaseUrl}/{createdGame!.Id}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Act & Assert - Update
@@ -466,15 +467,15 @@ public class GamesEndpointsTests : IDisposable
             ReleaseDate: new DateOnly(2024, 6, 1),
             Description: "Updated description"
         );
-        var updateResponse = await _client.PutAsJsonAsync($"/games/{createdGame.Id}", updateRequest);
+        var updateResponse = await _client.PutAsJsonAsync($"{BaseUrl}/{createdGame.Id}", updateRequest);
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Act & Assert - Delete
-        var deleteResponse = await _client.DeleteAsync($"/games/{createdGame.Id}");
+        var deleteResponse = await _client.DeleteAsync($"{BaseUrl}/{createdGame.Id}");
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         // Verify deletion
-        var finalGetResponse = await _client.GetAsync($"/games/{createdGame.Id}");
+        var finalGetResponse = await _client.GetAsync($"{BaseUrl}/{createdGame.Id}");
         finalGetResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 

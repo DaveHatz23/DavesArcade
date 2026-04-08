@@ -5,32 +5,37 @@ namespace DavesArcade.Api.Endpoints.Games.DeleteGame;
 
 public static class DeleteGameEndpoint
 {
-    public static void MapDeleteGame(this IEndpointRouteBuilder app)
+    /// <summary>
+    /// Maps the DELETE /games/{id} endpoint.
+    /// </summary>
+    public static RouteHandlerBuilder MapDeleteGame(this IEndpointRouteBuilder app, string? version = null)
     {
-        // DELETE /games/122233-434d-43434....
-
-        app.MapDelete("/{id}", async (
+        return app.MapDelete("/{id}", async (
             Guid id,
             IGameRepository gameRepository,
             ILogger<Program> logger) =>
         {
-            logger.LogInformation($"Deleting game id {id}");
+            logger.LogInformation("Deleting game {GameId}", id);
 
-            // Call the repository to delete the game by id.
-            // Return 204 No Content if successful
-            // Return 404 if the game with the specified id does not exist,
-            // or an appropriate error response if the delete operation fails for some reason (e.g., database error).
             var result = await gameRepository.DeleteByIdAsync(id);
-            
-            if (!result.IsSuccess)
+
+            if (result.IsSuccess)
             {
-                return result.ToHttpResult();
+                logger.LogInformation("Successfully deleted game {GameId}", id);
+            }
+            else
+            {
+                logger.LogWarning("Failed to delete game {GameId}: {ErrorCode} - {ErrorMessage}",
+                    id, result.Error!.Code, result.Error.Description);
             }
 
-            return Results.NoContent(); // REST convention for successful DELETE
+            return result.ToNoContentResult();
         })
-        .AllowAnonymous();
-
-        // TODO : for now, allow anonymous access to delete games, but in the future, we should restrict this to admin users only
+        .Produces(204)
+        .Produces(404)
+        .Produces(500)
+        .WithName(string.IsNullOrEmpty(version) ? "DeleteGame" : $"DeleteGame{version}")
+        .WithSummary("Delete a game")
+        .WithDescription("Deletes a game from the catalog");
     }
 }
