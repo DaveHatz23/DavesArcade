@@ -8,6 +8,9 @@ namespace DavesArcade.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
+            // Register caching
+            services.AddMemoryCache();
+
             // Register repositories
             services.AddSingleton<IGameRepository, InMemoryGameRepository>();
 

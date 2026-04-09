@@ -2,15 +2,22 @@
 using DavesArcade.Application.Interfaces;
 using DavesArcade.Application.Results;
 using DavesArcade.Domain.Entities;
+using DavesArcade.Infrastructure.Caching;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace DavesArcade.Infrastructure.Persistence.InMemory;
 
 public class InMemoryGameRepository : IGameRepository
 {
     private readonly List<Game> _games;
+    private readonly IMemoryCache _cache;
 
-    public InMemoryGameRepository()
+    private static readonly TimeSpan AllGamesCacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan SingleGameCacheDuration = TimeSpan.FromMinutes(10);
+
+    public InMemoryGameRepository(IMemoryCache cache)
     {
+        _cache = cache;
         _games = GetSeedData();
     }
 
@@ -83,17 +90,21 @@ public class InMemoryGameRepository : IGameRepository
 
     public Task<Result<IEnumerable<GameResultDto>>> GetAllAsync()
     {
-        var gameDtos = _games.Select(game => new GameResultDto(
-            game.Id,
-            game.Name,
-            game.Genre?.Name ?? "Unknown",
-            game.Price,
-            game.ReleaseDate,
-            game.ImageUri,
-            game.LastUpdatedBy
-        ));
+        var cached = _cache.GetOrCreate(CacheKeys.AllGames, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = AllGamesCacheDuration;
+            return _games.Select(game => new GameResultDto(
+                game.Id,
+                game.Name,
+                game.Genre?.Name ?? "Unknown",
+                game.Price,
+                game.ReleaseDate,
+                game.ImageUri,
+                game.LastUpdatedBy
+            )).ToList();
+        });
 
-        return Task.FromResult(Result<IEnumerable<GameResultDto>>.Success(gameDtos));
+        return Task.FromResult(Result<IEnumerable<GameResultDto>>.Success(cached!));
     }
 
     public Task<Result<GameResultDto>> GetByIdAsync(Guid id)
@@ -103,21 +114,25 @@ public class InMemoryGameRepository : IGameRepository
         if (game is null)
         {
             return Task.FromResult(Result<GameResultDto>.NotFound(
-                "Game.NotFound", 
+                "Game.NotFound",
                 $"Game with ID '{id}' was not found."));
         }
 
-        var gameDto = new GameResultDto(
-            game.Id,
-            game.Name,
-            game.Genre?.Name ?? "Unknown",
-            game.Price,
-            game.ReleaseDate,
-            game.ImageUri,
-            game.LastUpdatedBy
-        );
+        var cached = _cache.GetOrCreate(CacheKeys.GameById(id), entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = SingleGameCacheDuration;
+            return new GameResultDto(
+                game.Id,
+                game.Name,
+                game.Genre?.Name ?? "Unknown",
+                game.Price,
+                game.ReleaseDate,
+                game.ImageUri,
+                game.LastUpdatedBy
+            );
+        });
 
-        return Task.FromResult(Result<GameResultDto>.Success(gameDto));
+        return Task.FromResult(Result<GameResultDto>.Success(cached!));
     }
 
     public Task<Result<GameResultDto>> CreateAsync(CreateGameRequest createGameRequest)
@@ -150,6 +165,8 @@ public class InMemoryGameRepository : IGameRepository
         };
 
         _games.Add(game);
+
+        _cache.Remove(CacheKeys.AllGames);
 
         var gameDto = new GameResultDto(
             game.Id,
@@ -196,6 +213,9 @@ public class InMemoryGameRepository : IGameRepository
         game.Description = updateGameRequest.Description;
         game.LastUpdatedBy = "system"; // or pass this in the request
 
+        _cache.Remove(CacheKeys.AllGames);
+        _cache.Remove(CacheKeys.GameById(id));
+
         var gameDto = new GameResultDto(
             game.Id,
             game.Name,
@@ -211,7 +231,6 @@ public class InMemoryGameRepository : IGameRepository
 
     public Task<Result<bool>> DeleteByIdAsync(Guid id)
     {
-        // Check if the Game exists
         var game = _games.FirstOrDefault(g => g.Id == id);
 
         if (game is null)
@@ -222,6 +241,10 @@ public class InMemoryGameRepository : IGameRepository
         }
 
         _games.Remove(game);
+
+        _cache.Remove(CacheKeys.AllGames);
+        _cache.Remove(CacheKeys.GameById(id));
+
         return Task.FromResult(Result<bool>.Success(true));
     }
 

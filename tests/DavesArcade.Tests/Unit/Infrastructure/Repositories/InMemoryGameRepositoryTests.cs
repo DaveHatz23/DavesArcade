@@ -2,8 +2,8 @@
 using DavesArcade.Application.Results;
 using DavesArcade.Infrastructure.Persistence.InMemory;
 using FluentAssertions;
-using System;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DavesArcade.Tests.Unit.Infrastructure.Repositories;
 
@@ -13,7 +13,12 @@ public class InMemoryGameRepositoryTests
 
     public InMemoryGameRepositoryTests()
     {
-        _repository = new InMemoryGameRepository();
+        var services = new ServiceCollection();
+        services.AddMemoryCache();
+        var provider = services.BuildServiceProvider();
+        var cache = provider.GetRequiredService<IMemoryCache>();
+
+        _repository = new InMemoryGameRepository(cache);
     }
 
     #region GetAllAsync Tests

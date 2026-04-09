@@ -20,6 +20,7 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 - [API Endpoints](#-api-endpoints)
 - [Running Tests](#-running-tests)
 - [Logging & Monitoring](#-logging--monitoring)
+- [Caching](#-caching)
 - [Project Structure](#-project-structure)
 - [Design Decisions](#-design-decisions)
 - [Roadmap](#-roadmap)
@@ -37,6 +38,7 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 - ✅ **Structured Logging** - Serilog with console and file sinks for observability
 - ✅ **OpenAPI/Swagger** - Interactive API documentation with per-version docs
 - ✅ **API Versioning** - URL segment versioning (v1/v2) with Swagger integration
+- ✅ **In-Memory Caching** - Cache-aside pattern with `IMemoryCache` for read performance
 - ✅ **Minimal APIs** - Modern .NET 8 endpoint routing
 - ✅ **Docker Support** - Containerized deployment with Docker and Docker Compose
 - ✅ **Health Checks** - Built-in health monitoring endpoint
@@ -52,10 +54,11 @@ A modern RESTful API for managing a game catalog, showcasing **Clean Architectur
 | **Framework** | .NET 8.0 |
 | **API** | ASP.NET Core Minimal APIs |
 | **Versioning** | Asp.Versioning 8.x (URL segment) |
+| **Caching** | `Microsoft.Extensions.Caching.Memory` (IMemoryCache) |
 | **Testing** | xUnit, FluentAssertions, Coverlet |
 | **Documentation** | Swagger/OpenAPI (per-version docs) |
 | **Architecture** | Clean Architecture, Vertical Slices |
-| **Patterns** | Repository, Result, CQRS-lite |
+| **Patterns** | Repository, Result, Cache-Aside, CQRS-lite |
 | **DevOps** | Docker, Docker Compose, GitHub Actions |
 | **Logging** | Serilog (Console, File, Structured) |
 | **Monitoring** | Health Checks, Code Coverage (Codecov) |
@@ -125,6 +128,55 @@ Select-String -Pattern "ERROR" -Path logs/*.log  # Windows
 
 ---
 
+## ⚡ Caching
+
+The application uses the **Cache-Aside pattern** with `IMemoryCache` (built into .NET — no external dependencies required).
+
+### How It Works
+
+```
+Read:   Request → Cache hit?  ──Yes──► Return cached value
+                      │
+                      No
+                      │
+                      ▼
+               Query data source → Store in cache → Return value
+
+Write:  Create / Update / Delete → Invalidate affected cache entries
+```
+
+### Cache Policy
+
+| Operation | Cache Key | TTL | Invalidated By |
+|-----------|-----------|-----|----------------|
+| `GET /games` | `games:all` | 5 minutes | Create |
+| `GET /games/{id}` | `games:{id}` | 10 minutes | Update or Delete of that ID |
+| `POST /games` | — | — | Removes `games:all` |
+| `PUT /games/{id}` | — | — | Removes `games:all` + `games:{id}` |
+| `DELETE /games/{id}` | — | — | Removes `games:all` + `games:{id}` |
+
+### Implementation
+
+Cache keys are defined as constants in `CacheKeys.cs` to avoid magic strings:
+
+```csharp
+internal static class CacheKeys
+{
+    internal const string AllGames = "games:all";
+    internal static string GameById(Guid id) => $"games:{id}";
+}
+```
+
+Caching is registered entirely within the Infrastructure layer — no changes required in `Program.cs`:
+
+```csharp
+// DependencyInjection.cs
+services.AddMemoryCache();
+services.AddSingleton<IGameRepository, InMemoryGameRepository>();
+```
+
+---
+
 ## 🏗️ Architecture
 
 This project follows **Clean Architecture** principles with **Vertical Slice** organization:
@@ -143,6 +195,7 @@ This project follows **Clean Architecture** principles with **Vertical Slice** o
 - **In-Memory Repository**: Simplifies development and testing without database dependencies
 - **Vertical Slices**: Each feature (GetGames, CreateGame, etc.) is self-contained
 - **URL Segment Versioning**: Routes are prefixed with `/v{version}` (e.g. `/v1/games`, `/v2/games`)
+- **Cache-Aside Pattern**: Repository checks the cache before hitting the data source; writes invalidate affected entries
 
 ---
 
@@ -395,9 +448,12 @@ DavesArcade/
 │   │   └── Results/
 │   ├── DavesArcade.Domain/     # Domain Layer (Entities)
 │   │   └── Entities/
-│   └── DavesArcade.Infrastructure/  # Infrastructure Layer (Data Access)
+│   └── DavesArcade.Infrastructure/  # Infrastructure Layer (Data Access, Caching)
+│       ├── Caching/
+│       │   └── CacheKeys.cs        # Cache key constants
 │       └── Persistence/
 │           └── InMemory/
+│               └── InMemoryGameRepository.cs
 ├── tests/
 │   └── DavesArcade.Tests/      # Unit & Integration tests
 │       ├── Unit/               # Unit tests (47 tests)
@@ -469,6 +525,14 @@ For this showcase project:
 - **URL segment strategy**: `/v1/games` is the most discoverable and cache-friendly versioning approach
 - **Future-proof**: Adding v3 requires only a new endpoint mapping and version registration
 
+### Why In-Memory Caching?
+
+- **Zero infrastructure**: `IMemoryCache` is built into .NET — no Redis, no external services required
+- **Cache-Aside pattern**: Explicit control over what gets cached and when entries are invalidated
+- **Correct invalidation**: Writes (Create/Update/Delete) immediately remove stale entries — no stale reads
+- **Constant cache keys**: `CacheKeys.cs` keeps all key strings in one place, preventing bugs from typos
+- **Upgrade path**: Swapping to `IDistributedCache` (Redis) later only requires changing the Infrastructure registration, not any repository logic
+
 ---
 
 ## 🗺️ Roadmap
@@ -491,12 +555,13 @@ For this showcase project:
 - [x] Integration tests (28 tests)
 - [x] Structured logging with Serilog
 - [x] API versioning (v1/v2 with URL segment strategy)
+- [x] In-memory caching (Cache-Aside pattern with IMemoryCache)
 
 ### Phase 3: Advanced Features 📅 (Planned)
 - [ ] FluentValidation for request validation
 - [ ] PostgreSQL with EF Core
 - [ ] Authentication/Authorization (JWT)
 - [ ] Rate limiting
-- [ ] Caching (Redis)
+- [ ] Distributed caching (Redis)
 - [ ] Performance benchmarking
 - [ ] Blazor/Next.js frontend (optional)
